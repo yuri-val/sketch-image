@@ -4,3 +4,6 @@
 
 storage/generated/*
 storage/uploads/*
+
+.idea/
+diff/
