@@ -1,119 +1,105 @@
+:root {
+  --primary-gradient: linear-gradient(to top, #a8edea 0%, #fed6e3 100%);
+  --button-gradient: linear-gradient(90deg, rgb(34, 222, 237), rgb(135, 89, 215));
+  --glow-gradient: linear-gradient(45deg, #ff0000, #ff7300, #fffb00, #48ff00, #00ffd5, #002bff, #7a00ff, #ff00c8, #ff0000);
+  --loader-gradient: linear-gradient(134deg, #ff0000, #efff00, #00ff11, #00ffff, #0008ff, #f900ff);
+  --border-radius: 10px;
+  --animation-duration: 20s;
+}
 
 body {
-
   width: 99vw;
   height: 95vh;
-  background-image: linear-gradient(to top, #a8edea 0%, #fed6e3 100%);
+  background-image: var(--primary-gradient);
+}
 
-  .container {
-    margin-top: 50px;
-    display: flex;
-    justify-content: space-between;
+.container {
+  margin-top: 50px;
+  display: flex;
+  justify-content: space-between;
+}
 
-    .item {
-      width: 845px;
-      border-radius: 8px;
-      border: 1px solid #000;
-    }
+.item {
+  width: 845px;
+  border-radius: 8px;
+  border: 1px solid #000;
+}
 
+.loader {
+  aspect-ratio: 4/3;
+  background: var(--loader-gradient);
+  background-size: 360% 360%;
+  animation: gradient-animation 4s ease infinite;
+}
 
-    .loader {
-      aspect-ratio: 4/3;
-      background: linear-gradient(134deg, #ff0000, #efff00, #00ff11, #00ffff, #0008ff, #f900ff);
-      background-size: 360% 360%;
-      animation: gradient-animation 1s ease infinite;
-    }
+#magic-button {
+  margin-top: 5px;
+  width: 100%;
+  height: 50px;
+  border: none;
+  outline: none;
+  color: #fff;
+  background: var(--button-gradient);
+  cursor: pointer;
+  position: relative;
+  z-index: 0;
+  border-radius: var(--border-radius);
+  font-size: large;
+  text-transform: uppercase;
+}
 
-    @keyframes gradient-animation {
-      0% {
-        background-position: 0% 50%;
-      }
+#magic-button::before,
+#magic-button::after {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  border-radius: var(--border-radius);
+}
 
-      50% {
-        background-position: 100% 50%;
-      }
+#magic-button::before {
+  background: var(--glow-gradient);
+  top: -2px;
+  left: -2px;
+  background-size: 400%;
+  filter: blur(5px);
+  width: calc(100% + 4px);
+  height: calc(100% + 4px);
+  animation: glowing var(--animation-duration) linear infinite;
+  opacity: 0;
+  transition: opacity 0.3s ease-in-out;
+}
 
-      100% {
-        background-position: 0% 50%;
-      }
-    }
+#magic-button::after {
+  background: #111;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+}
 
-    #magic-button {
-      margin-top: 5px;
-      width: 100%;
-      height: 50px;
-      border: none;
-      outline: none;
-      color: #fff;
-      background: radial-gradient(circle at 40% 91%, rgba(251, 251, 251, 0.04) 0%, rgba(251, 251, 251, 0.04) 50%, rgba(229, 229, 229, 0.04) 50%, rgba(229, 229, 229, 0.04) 100%), radial-gradient(circle at 66% 97%, rgba(36, 36, 36, 0.04) 0%, rgba(36, 36, 36, 0.04) 50%, rgba(46, 46, 46, 0.04) 50%, rgba(46, 46, 46, 0.04) 100%), radial-gradient(circle at 86% 7%, rgba(40, 40, 40, 0.04) 0%, rgba(40, 40, 40, 0.04) 50%, rgba(200, 200, 200, 0.04) 50%, rgba(200, 200, 200, 0.04) 100%), radial-gradient(circle at 15% 16%, rgba(99, 99, 99, 0.04) 0%, rgba(99, 99, 99, 0.04) 50%, rgba(45, 45, 45, 0.04) 50%, rgba(45, 45, 45, 0.04) 100%), radial-gradient(circle at 75% 99%, rgba(243, 243, 243, 0.04) 0%, rgba(243, 243, 243, 0.04) 50%, rgba(37, 37, 37, 0.04) 50%, rgba(37, 37, 37, 0.04) 100%), linear-gradient(90deg, rgb(34, 222, 237), rgb(135, 89, 215));;
-      cursor: pointer;
-      position: relative;
-      z-index: 0;
-      border-radius: 10px;
+#magic-button:hover::before {
+  opacity: 1;
+}
 
-      font-size: large;
-      text-transform: uppercase;
-    }
+#magic-button:active {
+  color: #000;
+}
 
-    #magic-button:before {
-      content: '';
-      background: linear-gradient(45deg, #ff0000, #ff7300, #fffb00, #48ff00, #00ffd5, #002bff, #7a00ff, #ff00c8, #ff0000);
-      position: absolute;
-      top: -2px;
-      left: -2px;
-      background-size: 400%;
-      z-index: -1;
-      filter: blur(5px);
-      width: calc(100% + 4px);
-      height: calc(100% + 4px);
-      animation: glowing 20s linear infinite;
-      opacity: 0;
-      transition: opacity .3s ease-in-out;
-      border-radius: 10px;
-    }
+#magic-button:active::after {
+  background: transparent;
+}
 
-    #magic-button:active {
-      color: #000
-    }
+.description {
+  max-height: 400px;
+  overflow-x: auto;
+}
 
-    #magic-button:active:after {
-      background: transparent;
-    }
+@keyframes gradient-animation {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
 
-    #magic-button:hover:before {
-      opacity: 1;
-    }
-
-    #magic-button:after {
-      z-index: -1;
-      content: '';
-      position: absolute;
-      width: 100%;
-      height: 100%;
-      background: #111;
-      left: 0;
-      top: 0;
-      border-radius: 10px;
-    }
-
-    @keyframes glowing {
-      0% {
-        background-position: 0 0;
-      }
-
-      50% {
-        background-position: 400% 0;
-      }
-
-      100% {
-        background-position: 0 0;
-      }
-    }
-
-  }
-
-  .description {
-    max-height: 400px;
-    overflow-x: auto;
-  }
+@keyframes glowing {
+  0%, 100% { background-position: 0 0; }
+  50% { background-position: 400% 0; }
 }

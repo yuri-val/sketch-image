@@ -1,16 +1,12 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
   <meta charset="utf-8">
-  <title>HTML5 Drawing Tool Demo</title>
-  <style type="text/css">
-    body {
-      font-family: Arial;
-    }
-  </style>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GenAI Sketch-to-Image</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/drawing-tool@2.3.2/dist/drawing-tool.css">
+  <link rel="stylesheet" href="./assets/styles/styles.css">
 </head>
-
 <body>
   <div class="container">
     <div class="item container-drawing">
@@ -20,33 +16,15 @@
     <img class="item" id="magic-image" src="" alt="Loading..." style="display: block;">
   </div>
   <div class="description">
-    <span id="image-description"></span>
+    <div id="image-description"></div>
   </div>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.3/jquery.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/1.5.0/fabric.js"></script>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/drawing-tool@2.3.2/dist/drawing-tool.css">
-  <link rel="stylesheet" href="./assets/styles/styles.css">
-  <script src="https://cdn.jsdelivr.net/npm/drawing-tool@2.3.2/dist/drawing-tool.js"></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/1.5.0/fabric.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/drawing-tool@2.3.2/dist/drawing-tool.min.js"></script>
   <script src="https://unpkg.com/showdown/dist/showdown.min.js"></script>
   <script src="./assets/javascript/dt-init.js"></script>
   <script src="./assets/javascript/api.js"></script>
-  <script>
-    document.getElementById('magic-button').addEventListener('click', function () {
-      document.getElementById('magic-image').src = "";
-      document.getElementById('image-description').innerHTML = "";
-      document.getElementById('magic-image').classList.add('loader');
-      var canvas = document.querySelector("#drawing-tool canvas.lower-canvas");
-      var base64image = canvas.toDataURL("image/png");
-      magic(base64image).then(function (response) {
-        var converter = new showdown.Converter();
-
-        document.getElementById('magic-image').src = response['image'];
-        document.getElementById('magic-image').style.display = 'block';
-        document.getElementById('magic-image').classList.remove('loader');
-        document.getElementById('image-description').innerHTML = converter.makeHtml(response['description']);
-      });
-    });
-  </script>
+  <script src="./assets/javascript/main.js"></script>
 </body>
-
 </html>

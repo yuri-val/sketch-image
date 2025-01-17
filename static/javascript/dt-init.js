@@ -1,80 +1,82 @@
-var drawingTool = new DrawingTool("#drawing-tool", {
+const STAMPS_BASE_URL = 'https://interactions-resources.concord.org/stamps/';
+const STORAGE_KEY = 'drawingToolState';
+
+const STAMPS = [
+  'simple-atom.svg',
+  'diatomic.svg',
+  'diatomic-red.svg',
+  'triatomic.svg',
+  'positive-atom.svg',
+  'negative-atom.svg',
+  'slow-particle.svg',
+  'medium-particle.svg',
+  'fast-particle.svg',
+  'low-density-particles.svg'
+];
+
+const drawingToolConfig = {
   stamps: {
-    'Molecules': [
-      'https://interactions-resources.concord.org/stamps/simple-atom.svg',
-      'https://interactions-resources.concord.org/stamps/diatomic.svg',
-      'https://interactions-resources.concord.org/stamps/diatomic-red.svg',
-      'https://interactions-resources.concord.org/stamps/triatomic.svg',
-      'https://interactions-resources.concord.org/stamps/positive-atom.svg',
-      'https://interactions-resources.concord.org/stamps/negative-atom.svg',
-      'https://interactions-resources.concord.org/stamps/slow-particle.svg',
-      'https://interactions-resources.concord.org/stamps/medium-particle.svg',
-      'https://interactions-resources.concord.org/stamps/fast-particle.svg',
-      'https://interactions-resources.concord.org/stamps/low-density-particles.svg'
-    ],
-    'Second Molecules': [
-      'https://interactions-resources.concord.org/stamps/simple-atom.svg',
-      'https://interactions-resources.concord.org/stamps/diatomic.svg',
-      'https://interactions-resources.concord.org/stamps/diatomic-red.svg',
-      'https://interactions-resources.concord.org/stamps/triatomic.svg',
-      'https://interactions-resources.concord.org/stamps/positive-atom.svg',
-      'https://interactions-resources.concord.org/stamps/negative-atom.svg',
-      'https://interactions-resources.concord.org/stamps/slow-particle.svg',
-      'https://interactions-resources.concord.org/stamps/medium-particle.svg',
-      'https://interactions-resources.concord.org/stamps/fast-particle.svg',
-      'https://interactions-resources.concord.org/stamps/low-density-particles.svg'
-    ]
+    'Molecules': STAMPS.map(stamp => `${STAMPS_BASE_URL}${stamp}`),
+    'Second Molecules': STAMPS.map(stamp => `${STAMPS_BASE_URL}${stamp}`)
   },
   parseSVG: true,
   separatorsAfter: [
     "stamp",
     "strokeWidthPalette"
   ]
-});
+};
 
-// Load state from localStorage on page load
-var savedState = localStorage.getItem('drawingToolState');
-if (savedState) {
-  drawingTool.load(JSON.parse(savedState));
-}
+const drawingTool = new DrawingTool("#drawing-tool", drawingToolConfig);
 
-// Save state to localStorage on change
-drawingTool.on('drawing:changed', function () {
-  var state = drawingTool.save();
-  localStorage.setItem('drawingToolState', JSON.stringify(state));
-});
+const loadState = () => {
+  const savedState = localStorage.getItem(STORAGE_KEY);
+  if (savedState) {
+    drawingTool.load(JSON.parse(savedState));
+  }
+};
 
-$("#set-background").on("click", function () {
-  drawingTool.setBackgroundImage($("#background-src").val());
-});
-$("#resize-background").on("click", function () {
-  drawingTool.resizeBackgroundToCanvas();
-});
-$("#resize-canvas").on("click", function () {
-  drawingTool.resizeCanvasToBackground();
-});
-$("#shrink-background").on("click", function () {
-  drawingTool.shrinkBackgroundToCanvas();
-});
-$("#clear").on("click", function () {
-  drawingTool.clear(true);
-  localStorage.removeItem('drawingToolState');
-});
-$("#save").on("click", function () {
-  var state = drawingTool.save();
-  localStorage.setItem('drawingToolState', JSON.stringify(state));
-  $("#load").removeAttr("disabled");
-});
-$("#load").on("click", function () {
-  var state = localStorage.getItem('drawingToolState');
-  if (state === null) return;
-  drawingTool.load(JSON.parse(state));
-});
-$("#download").on("click", function () {
-  var canvas = document.querySelector("#drawing-tool canvas.lower-canvas");
-  var dataURL = canvas.toDataURL("image/jpeg");
-  var link = document.createElement("a");
-  link.href = dataURL;
-  link.download = "canvas.jpg";
-  link.click();
-});
+const saveState = () => {
+  const state = drawingTool.save();
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+};
+
+const setupEventListeners = () => {
+  drawingTool.on('drawing:changed', saveState);
+
+  const actions = {
+    'set-background': () => drawingTool.setBackgroundImage($("#background-src").val()),
+    'resize-background': () => drawingTool.resizeBackgroundToCanvas(),
+    'resize-canvas': () => drawingTool.resizeCanvasToBackground(),
+    'shrink-background': () => drawingTool.shrinkBackgroundToCanvas(),
+    'clear': () => {
+      drawingTool.clear(true);
+      localStorage.removeItem(STORAGE_KEY);
+    },
+    'save': () => {
+      saveState();
+      $("#load").removeAttr("disabled");
+    },
+    'load': () => {
+      const state = localStorage.getItem(STORAGE_KEY);
+      if (state) drawingTool.load(JSON.parse(state));
+    },
+    'download': () => {
+      const canvas = document.querySelector("#drawing-tool canvas.lower-canvas");
+      const link = document.createElement("a");
+      link.href = canvas.toDataURL("image/jpeg");
+      link.download = "canvas.jpg";
+      link.click();
+    }
+  };
+
+  Object.entries(actions).forEach(([id, action]) => {
+    $(`#${id}`).on("click", action);
+  });
+};
+
+const init = () => {
+  loadState();
+  setupEventListeners();
+};
+
+$(document).ready(init);
