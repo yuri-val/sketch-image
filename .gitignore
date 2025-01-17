@@ -11,3 +11,6 @@ storage/uploads/*
 
 .idea/
 diff/
+
+
+**/*.pt

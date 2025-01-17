@@ -56,6 +56,51 @@
    ```
 6. Відкрийте застосунок у браузері за адресою `http://localhost:5000`.
 
+## Metrics
+### CLIP Similarity
+
+```python
+from metrics.clip_similarity import CLIPSimilarity
+
+uuid = "bbc9c3c7-6b71-4dbb-8739-f321306e908d"
+
+or_im_path = f"storage/data/{uuid}/original.png"
+gen_im_path = f"storage/data/{uuid}/generated.png"
+description = open(f"storage/data/{uuid}/description.txt").read()
+
+cs = CLIPSimilarity()
+or_score = cs.compute_similarity(or_im_path, description)
+gen_score = cs.compute_similarity(gen_im_path, description)
+
+print(f'[ORIGINAL] CLIP Similarity score: {or_score}')
+print(f'[GENERATED] CLIP Similarity score: {gen_score}')
+ 
+
+```
+
+### Object Detection Matching
+```python
+from metrics.object_detection_matching import ObjectDetectionMatching
+
+uuid = "53ddf04b-1a7f-4894-90d6-79605244d5d5"
+
+or_im_path = f"storage/data/{uuid}/original.png"
+gen_im_path = f"storage/data/{uuid}/generated.png"
+description = open(f"storage/data/{uuid}/description.txt").read()
+
+object_matcher = ObjectDetectionMatching()
+
+object_matcher.extract_objects_from_text(description)
+
+or_object_match_score = object_matcher.compute_object_match_score(or_im_path, description)
+gen_object_match_score = object_matcher.compute_object_match_score(gen_im_path, description)
+
+print(f"[ORIGINAL] Object Detection Match Score: {or_object_match_score:.2f}%")
+print(f"[GENERATED] Object Detection Match Score: {gen_object_match_score:.2f}%")
+
+```
+
+
 ## Використання
 1. Відкрийте веб-інтерфейс.
 2. Намалюйте ескіз за допомогою інструменту для малювання або завантажте готовий ескіз.
