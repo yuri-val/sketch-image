@@ -4,7 +4,10 @@ from datetime import datetime
 from typing import Tuple
 from PIL import Image
 import requests
-from io import BytesIO
+from io import BytesIO, StringIO
+import uuid
+import shutil
+from markdown import Markdown
 
 
 class ImageProcessor:
@@ -20,6 +23,7 @@ class ImageProcessor:
         """
         self.upload_dir = upload_dir
         self.generated_dir = generated_dir
+        self.__md = self._setup_markdown_converter()
 
     def process_base64_image(self, image_data: str) -> str:
         """
@@ -62,6 +66,76 @@ class ImageProcessor:
         filepath = self._get_filepath(self.generated_dir, filename)
         combined_image.save(filepath)
         return filename
+
+    def save_image_data(self, original_path: str, generated_url: str, description: str) -> str:
+        """
+        Save original image, generated image, and description using a UUID.
+
+        Args:
+            original_path (str): Path to the original image.
+            generated_url (str): Path to the generated image.
+            description (str): Description of the image.
+
+        Returns:
+            str: The UUID of the saved data.
+
+        Raises:
+            ValueError: If any of the files cannot be saved.
+        """
+        data_uuid = str(uuid.uuid4())
+        base_path = os.path.join("storage", "data", data_uuid)
+        os.makedirs(base_path, exist_ok=True)
+
+        try:
+            # Save original image
+            shutil.copy2(original_path, os.path.join(base_path, "original.png"))
+
+            # Save generated image
+            remote_image = self._fetch_remote_image(generated_url)
+            remote_image.save(os.path.join(base_path, "generated.png"))
+
+            # Save description as Markdown
+            with open(os.path.join(base_path, "description.md"), "w", encoding="utf-8") as f:
+                f.write(description)
+
+            # Save description as plain text
+            with open(os.path.join(base_path, "description.txt"), "w", encoding="utf-8") as f:
+                f.write(self._strip_markdown(description))
+
+            return data_uuid
+        except Exception as e:
+            raise ValueError(f"Failed to save image data: {str(e)}")
+
+    def _strip_markdown(self, text: str) -> str:
+        """
+        Strip Markdown formatting from text.
+
+        Args:
+            text (str): Markdown-formatted text.
+
+        Returns:
+            str: Plain text without Markdown formatting.
+        """
+        return self.__md.convert(text)
+
+    @staticmethod
+    def _setup_markdown_converter():
+        def unmark_element(element, stream=None):
+            if stream is None:
+                stream = StringIO()
+            if element.text:
+                stream.write(element.text)
+            for sub in element:
+                unmark_element(sub, stream)
+            if element.tail:
+                stream.write(element.tail)
+            return stream.getvalue()
+
+        # patching Markdown
+        Markdown.output_formats["plain"] = unmark_element
+        md = Markdown(output_format="plain")
+        md.stripTopLevelTags = False
+        return md
 
     @staticmethod
     def _strip_base64_header(image_data: str) -> str:

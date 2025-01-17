@@ -28,12 +28,15 @@ class ImageProcessingService:
             converted_image_url = self.sketch_converter.convert_sketch(filepath, description)
             
             self.image_processor.save_generated_image(filepath, converted_image_url)
+
+            uuid = self.image_processor.save_image_data(filepath, converted_image_url, description)
             
             return {
                 "message": "Image received and processed",
                 "filename": filename,
                 "description": description,
                 "image": converted_image_url,
+                "uuid": uuid,
             }, 200
         except ValueError as e:
             return {"error": str(e)}, 400

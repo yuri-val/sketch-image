@@ -5,6 +5,7 @@ venv
 **/__pycache__/*
 **/.DS_Store
 
+storage/data/*
 storage/generated/*
 storage/uploads/*
 
