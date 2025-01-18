@@ -1,10 +1,11 @@
-import base64
 import os
+import requests
 from typing import Optional
-from openai import OpenAI
 
 class ImageDescriber:
-    """A class to describe images using OpenAI's GPT model."""
+    """A class to describe images using Worqhat's image analysis API."""
+
+    API_URL = "https://api.worqhat.com/api/ai/content/v4"
 
     PROMPT = """
     You are analyzing a hand-drawn sketch that needs to be transformed into a realistic image. Please provide a detailed description that could be used as a prompt for image generation:
@@ -36,13 +37,10 @@ class ImageDescriber:
     """
 
     def __init__(self, api_key: Optional[str] = None):
-        """
-        Initialize the ImageDescriber.
-
-        Args:
-            api_key (str, optional): The OpenAI API key. If not provided, it will be fetched from environment variables.
-        """
-        self.client = OpenAI(api_key=api_key or os.getenv("OPENAI_API_KEY"))
+        self.api_key = api_key or os.getenv("WORQHAT_API_KEY")
+        if not self.api_key:
+            raise ValueError(
+                "Worqhat API key is required. Set it as an environment variable or pass it to the constructor.")
 
     def get_description(self, image_path: str) -> str:
         """
@@ -58,48 +56,38 @@ class ImageDescriber:
             ValueError: If the image processing fails.
         """
         try:
-            base64_image = self._encode_image(image_path)
-            return self._get_ai_description(base64_image)
+            return self._get_ai_description(image_path)
         except Exception as e:
             raise ValueError(f"Failed to process image: {str(e)}")
 
-    def _encode_image(self, image_path: str) -> str:
-        """
-        Encode the image file to base64.
+    def _get_ai_description(self, image_path: str) -> str:
+        url = self.API_URL
+        payload = {
+            'question': self.PROMPT,
+            'model': 'aicon-v4-nano-160824',
+            'training_data': 'You are analyzing a hand-drawn sketch that needs to be transformed into a realistic image.',
+            'stream_data': 'false',
+            'response_type': 'text'
+        }
+        
+        with open(image_path, 'rb') as image_file:
+            files = [
+                ('files', ('sketch.png', image_file, 'image/png'))
+            ]
+        
+            headers = {
+                'Authorization': f'Bearer {self.api_key}',
+            }
 
-        Args:
-            image_path (str): The path to the image file.
+            response = requests.request("POST", url, headers=headers, data=payload, files=files)
 
-        Returns:
-            str: The base64 encoded image.
-        """
-        with open(image_path, "rb") as image_file:
-            return base64.b64encode(image_file.read()).decode("utf-8")
+            if response.status_code != 200:
+                print(f"Error response: {response.status_code}")
+                print(f"Response content: {response.text}")
+                response.raise_for_status()
 
-    def _get_ai_description(self, base64_image: str) -> str:
-        """
-        Get the AI-generated description of the image.
-
-        Args:
-            base64_image (str): The base64 encoded image.
-
-        Returns:
-            str: The AI-generated description.
-        """
-        response = self.client.chat.completions.create(
-            model="gpt-4o-mini",
-            messages=[
-                {
-                    "role": "user",
-                    "content": [
-                        {"type": "text", "text": self.PROMPT},
-                        {
-                            "type": "image_url",
-                            "image_url": {"url": f"data:image/png;base64,{base64_image}"},
-                        },
-                    ],
-                }
-            ],
-            max_tokens=500,
-        )
-        return response.choices[0].message.content
+            result = response.json()
+            if 'content' in result:
+                return result['content']
+            else:
+                raise ValueError(f"Unexpected API response: {result}")
