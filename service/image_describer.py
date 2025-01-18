@@ -7,6 +7,10 @@ class ImageDescriber:
 
     API_URL = "https://api.worqhat.com/api/ai/content/v4"
 
+    TRAINING_DATA = """
+        You are analyzing a hand-drawn sketch that needs to be transformed into a realistic image. Give me JUST a prompt to generate realistic images by my sketch.
+    """
+
     PROMPT = """
     You are analyzing a hand-drawn sketch that needs to be transformed into a realistic image. Please provide a detailed description that could be used as a prompt for image generation:
 
@@ -65,7 +69,7 @@ class ImageDescriber:
         payload = {
             'question': self.PROMPT,
             'model': 'aicon-v4-nano-160824',
-            'training_data': 'You are analyzing a hand-drawn sketch that needs to be transformed into a realistic image.',
+            'training_data': self.TRAINING_DATA,
             'stream_data': 'false',
             'response_type': 'text'
         }
