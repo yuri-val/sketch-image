@@ -1,6 +1,7 @@
 from typing import Dict, Callable
 from .clip_similarity import CLIPSimilarity
 from .object_detection_matching import ObjectDetectionMatching
+from .fid_metric import FIDMetric
 import os
 from abc import ABC, abstractmethod
 
@@ -23,6 +24,13 @@ class ObjectDetectionCalculator(MetricCalculator):
     def compute(self, image_path: str, description: str) -> float:
         return self.object_detection.compute_object_match_score(image_path, description)
 
+class FIDCalculator(MetricCalculator):
+    def __init__(self, fid_metric: FIDMetric):
+        self.fid_metric = fid_metric
+
+    def compute(self, image_path: str, description: str) -> float:
+        return self.fid_metric.compute_fid(image_path, description)
+
 class MetricsCollector:
     """A class to collect and manage various metrics for image-text comparison."""
 
@@ -31,10 +39,12 @@ class MetricsCollector:
         self.uuid = uuid
         clip_similarity = CLIPSimilarity()
         object_detection = ObjectDetectionMatching()
+        fid_metric = FIDMetric()
         
         self.calculators = {
             'clip_similarity': CLIPSimilarityCalculator(clip_similarity),
-            'object_match_score': ObjectDetectionCalculator(object_detection)
+            'object_match_score': ObjectDetectionCalculator(object_detection),
+            'fid_score': FIDCalculator(fid_metric)
         }
         
         self.image_paths = {

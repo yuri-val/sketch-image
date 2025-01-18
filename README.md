@@ -57,6 +57,18 @@
 6. Відкрийте застосунок у браузері за адресою `http://localhost:5000`.
 
 ## Metrics
+### All Metrics
+
+```python
+from metrics.metrics_collector import MetricsCollector
+
+uuid = "53ddf04b-1a7f-4894-90d6-79605244d5d5"
+mc = MetricsCollector(uuid)
+
+mc.analyze()
+
+```
+
 ### CLIP Similarity
 
 ```python
