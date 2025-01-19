@@ -8,6 +8,7 @@ from io import BytesIO, StringIO
 import uuid
 import shutil
 from markdown import Markdown
+from .s3_uploader import S3Uploader
 
 
 class ImageProcessor:
@@ -23,7 +24,8 @@ class ImageProcessor:
         """
         self.upload_dir = upload_dir
         self.generated_dir = generated_dir
-        self.__md = self._setup_markdown_converter()
+        self._md = self._setup_markdown_converter()
+        self.s3u = S3Uploader()
 
     def process_base64_image(self, image_data: str) -> str:
         """
@@ -38,11 +40,10 @@ class ImageProcessor:
         Raises:
             ValueError: If the base64 string is invalid.
         """
-        image_data = self._strip_base64_header(image_data)
-        image_bytes = self._decode_base64(image_data)
+        image_bytes = self._decode_base64(self._strip_base64_header(image_data))
         filename = self._generate_filename("uploaded_image")
         filepath = self._get_filepath(self.upload_dir, filename)
-        self._save_image_bytes(filepath, image_bytes)
+        self._save_file(filepath, image_bytes, "wb")
         return filename
 
     def save_generated_image(self, image_path: str, url: str) -> str:
@@ -87,42 +88,46 @@ class ImageProcessor:
         os.makedirs(base_path, exist_ok=True)
 
         try:
-            # Save original image
-            shutil.copy2(original_path, os.path.join(base_path, "original.png"))
+            base_s3_path = base_path.replace('storage/', '')
 
-            # Save generated image
-            remote_image = self._fetch_remote_image(generated_url)
-            remote_image.save(os.path.join(base_path, "generated.png"))
-
-            # Save description as Markdown
-            with open(os.path.join(base_path, "description.md"), "w", encoding="utf-8") as f:
-                f.write(description)
-
-            # Save description as plain text
-            with open(os.path.join(base_path, "description.txt"), "w", encoding="utf-8") as f:
-                f.write(self._strip_markdown(description))
+            self._save_and_upload_image(original_path, base_path, base_s3_path, "original.png", copy=True)
+            self._save_and_upload_image(generated_url, base_path, base_s3_path, "generated.png", remote=True)
+            self._save_and_upload_description(description, base_path, base_s3_path)
 
             return data_uuid
         except Exception as e:
             raise ValueError(f"Failed to save image data: {str(e)}")
 
+    def _save_and_upload_image(self, source: str, base_path: str, base_s3_path: str, filename: str, copy: bool = False, remote: bool = False):
+        """Save and upload an image file."""
+        local_path = os.path.join(base_path, filename)
+        if copy:
+            shutil.copy2(source, local_path)
+        elif remote:
+            remote_image = self._fetch_remote_image(source)
+            remote_image.save(local_path)
+        self.s3u.upload(local_path, base_s3_path, filename)
+
+    def _save_and_upload_description(self, description: str, base_path: str, base_s3_path: str):
+        """Save and upload description in Markdown and plain text formats."""
+        md_path = os.path.join(base_path, "description.md")
+        txt_path = os.path.join(base_path, "description.txt")
+
+        self._save_file(md_path, description)
+        self._save_file(txt_path, self._strip_markdown(description))
+
+        self.s3u.upload(md_path, base_s3_path, "description.md")
+        self.s3u.upload(txt_path, base_s3_path, "description.txt")
+
     def _strip_markdown(self, text: str) -> str:
-        """
-        Strip Markdown formatting from text.
-
-        Args:
-            text (str): Markdown-formatted text.
-
-        Returns:
-            str: Plain text without Markdown formatting.
-        """
-        return self.__md.convert(text)
+        """Strip Markdown formatting from text."""
+        return self._md.convert(text)
 
     @staticmethod
     def _setup_markdown_converter():
+        """Set up and return a Markdown converter."""
         def unmark_element(element, stream=None):
-            if stream is None:
-                stream = StringIO()
+            stream = stream or StringIO()
             if element.text:
                 stream.write(element.text)
             for sub in element:
@@ -131,7 +136,6 @@ class ImageProcessor:
                 stream.write(element.tail)
             return stream.getvalue()
 
-        # patching Markdown
         Markdown.output_formats["plain"] = unmark_element
         md = Markdown(output_format="plain")
         md.stripTopLevelTags = False
@@ -164,10 +168,10 @@ class ImageProcessor:
         return filepath
 
     @staticmethod
-    def _save_image_bytes(filepath: str, image_bytes: bytes) -> None:
-        """Save image bytes to a file."""
-        with open(filepath, "wb") as f:
-            f.write(image_bytes)
+    def _save_file(filepath: str, content: str | bytes, mode: str = "w") -> None:
+        """Save content to a file."""
+        with open(filepath, mode, encoding="utf-8" if mode == "w" else None) as f:
+            f.write(content)
 
     @staticmethod
     def _fetch_remote_image(url: str) -> Image.Image:
