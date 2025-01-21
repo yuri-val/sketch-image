@@ -66,6 +66,7 @@ class ImageProcessor:
         filename = self._generate_filename("generated_image")
         filepath = self._get_filepath(self.generated_dir, filename)
         combined_image.save(filepath)
+        self.s3u.upload(filepath, 'generated', filename)
         return filename
 
     def save_image_data(self, original_path: str, generated_url: str, description: str) -> str:
