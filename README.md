@@ -4,31 +4,54 @@
 Цей проєкт спрямований на використання генеративного штучного інтелекту (GenAI) для перетворення ручних ескізів у реалістичні зображення. Користувачі можуть малювати ескізи у веб-інтерфейсі, надсилати їх для обробки та отримувати детальний опис зображення і реалістичну версію свого ескізу. Проєкт демонструє використання сучасних інструментів ШІ для створення креативного контенту.
 
 ## Функціонал
-- **Завантаження ескізів**: Веб-інтерфейс для створення та завантаження ескізів.
-- **Опис зображення**: Автоматична генерація детальних описів зображень за допомогою OpenAI API.
-- **Перетворення ескізів у зображення**: Трансформація ескізів у реалістичні зображення за допомогою WorqHat API.
-- **Обробка зображень**: Ефективна обробка та збереження завантажених і згенерованих зображень.
-- **Інтерактивний інтерфейс**: Зручний інтерфейс з миттєвим зворотним зв'язком.
+- **Завантаження ескізів**: Веб-інтерфейс для створення та завантаження ескізів
+- **Опис зображення**: Автоматична генерація детальних описів зображень за допомогою WorqHat API
+- **Перетворення ескізів у зображення**: Трансформація ескізів у реалістичні зображення
+- **Обробка зображень**: Ефективна обробка та збереження завантажених і згенерованих зображень
+- **Метрики оцінки**: Вбудовані метрики для оцінки якості генерації
 
-## Технічний підхід
+## Технічний стек
 1. **Бекенд**:
-   - **Фреймворк**: Flask для створення API та запуску застосунку.
-   - **Обробка зображень**: Бібліотека PIL для обробки та комбінування зображень.
-   - **API**:
-     - OpenAI API для генерації детальних описів зображень.
-     - WorqHat API для перетворення ескізів у реалістичні зображення.
-2. **Фронтенд**:
-   - **HTML/CSS/JavaScript**: Забезпечення адаптивного та інтерактивного веб-інтерфейсу.
-   - **Інструмент для малювання**: Canvas для створення ескізів за допомогою бібліотеки DrawingTool.
-3. **Сховище**:
-   - Завантажені ескізи та згенеровані зображення зберігаються у структурованій директорії.
-4. **Змінні середовища**:
-   - Керування API-ключами через змінні середовища для безпеки.
+   - Flask для API та веб-серверу
+   - PIL для обробки зображень
+   - WorqHat API для генерації зображень та описів
+   - AWS S3 для збереження файлів
+
+2. **AI/ML компоненти**:
+   - CLIP для обчислення схожості зображень
+   - YOLO для детекції об'єктів
+   - FID метрики для оцінки якості
+   - SSIM для структурного порівняння зображень
+
+3. **Фронтенд**:
+   - HTML/CSS/JavaScript
+   - Canvas для малювання
+   - DrawingTool для інтерфейсу малювання
+
+## Метрики оцінки
+Проєкт включає наступні метрики для оцінки якості генерації:
+
+1. **CLIP Similarity**:
+   - Оцінює семантичну схожість між зображенням та описом
+   - Використовує модель CLIP від OpenAI
+
+2. **Object Detection Matching**:
+   - Порівнює об'єкти, виявлені на зображенні, з описаними в тексті
+   - Використовує YOLOv8 для детекції об'єктів
+
+3. **FID (Fréchet Inception Distance)**:
+   - Оцінює якість згенерованих зображень
+   - Порівнює розподіли ознак оригінального та згенерованого зображень
+
+4. **SSIM (Structural Similarity Index)**:
+   - Оцінює структурну схожість між зображеннями
+   - Враховує яскравість, контрастність і структуру
 
 ## Інсталяція
 ### Вимоги
-- Python 3.9 або новіша версія
-- Pip
+- Python 3.9+
+- pip
+- віртуальне середовище Python
 
 ### Налаштування
 1. Клонуйте репозиторій:
@@ -36,27 +59,36 @@
    git clone git@github.com:yuri-val/sketch-image.git
    cd sketch-image
    ```
-2. Створіть віртуальне середовище та активуйте його:
+
+2. Створіть віртуальне середовище:
    ```bash
    python -m venv venv
-   source venv/bin/activate  # На Windows використовуйте venv\Scripts\activate
+   source venv/bin/activate  # Для Windows: venv\Scripts\activate
    ```
+
 3. Встановіть залежності:
    ```bash
    pip install -r requirements.txt
    ```
-4. Налаштуйте змінні середовища для API-ключів:
+
+4. Налаштуйте змінні середовища:
    ```bash
-   export SCG_OPENAI_API_KEY="<your_openai_api_key>"
-   export WORQHAT_API_KEY="<your_worqhat_api_key>"
+   export WORQHAT_API_KEY="your_worqhat_api_key"
+   export AWS_ACCESS_KEY_ID="your_aws_access_key"
+   export AWS_SECRET_ACCESS_KEY="your_aws_secret_key"
    ```
-5. Запустіть застосунок:
+
+## Використання
+
+### Веб-інтерфейс
+1. Запустіть сервер:
    ```bash
    python app.py
    ```
-6. Відкрийте застосунок у браузері за адресою `http://localhost:5000`.
+2. Відкрийте браузер за адресою `http://localhost:5050`
+3. Намалюйте або завантажте ескіз
+4. Натисніть кнопку "Magic" для обробки
 
-## Metrics
 ### All Metrics
 
 ```python
@@ -142,11 +174,19 @@ print(f"[GENERATED] Object Detection Match Score: {gen_object_match_score:.2f}%"
 ```
 .
 ├── app.py               # Flask-застосунок
-├── requirements.txt     # Залежності проєкту
+├── requirements.txt     # Основні залежності проєкту
+├── requirements.metrics.txt # Залежності для метрик
 ├── service              # Сервіси бекенду
+│   ├── file_handler.py
 │   ├── image_describer.py
 │   ├── image_processor.py
 │   └── sketch_converter.py
+├── metrics              # Модулі для обчислення метрик
+│   ├── clip_similarity.py
+│   ├── fid_metric.py
+│   ├── metrics_collector.py
+│   ├── object_detection_matching.py
+│   └── ssim_metric.py
 ├── static               # Фронтенд-ресурси
 │   ├── index.html
 │   ├── javascript
@@ -155,11 +195,11 @@ print(f"[GENERATED] Object Detection Match Score: {gen_object_match_score:.2f}%"
 │   └── styles
 │       └── styles.css
 ├── storage              # Завантажені та згенеровані зображення
+│   ├── data
 │   ├── generated
 │   └── uploads
 └── templates            # HTML-шаблони (за потреби)
 ```
-
 ## Ліцензія
 Цей проєкт ліцензовано під MIT License. Деталі дивіться у файлі LICENSE.
 
@@ -167,7 +207,27 @@ print(f"[GENERATED] Object Detection Match Score: {gen_object_match_score:.2f}%"
 - [Yuri V](https://github.com/yuri-val)
 
 ## Подяки
-- [OpenAI](https://github.com/openai/openai-python) та [WorqHat](https://docs.worqhat.com/api-8951020) за їхні API
+- [WorqHat](https://docs.worqhat.com/api-8951020) за їх API
 - Розробники [Flask](https://github.com/pallets/flask) і [PIL](https://github.com/python-pillow/Pillow)
 - Бібліотека [DrawingTool](https://github.com/concord-consortium/drawing-tool) за підтримку інтерактивного полотна
 
+```python
+from service.image_describer import ImageDescriber
+from dotenv import load_dotenv
+
+load_dotenv('.env')
+
+id = ImageDescriber()
+id.get_description("storage/data/5e3574a4-6e8d-462d-9cd2-1fd7d64fa849/original.png")
+
+# ---
+
+from service.sketch_converter import SketchConverter
+from dotenv import load_dotenv
+
+load_dotenv('.env')
+
+sc = SketchConverter()
+sc.convert_sketch("storage/data/02a42860-7f1b-44d7-bd4f-3d8c3044c724/original.png", 'two dogs')
+
+```
